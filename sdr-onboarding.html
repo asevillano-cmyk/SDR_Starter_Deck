@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDR Onboarding Week 2 – Sesame HR</title>
+  <style>
+    :root {
+      --primary: #1B2A4A;
+      --accent:  #00C9A7;
+      --accent-light: #E8FAF7;
+      --bg:      #EFF2F8;
+      --card-bg: #FFFFFF;
+      --border:  #E2E8F3;
+      --text:    #1B2A4A;
+      --muted:   #6B7FA3;
+      --block1:  #4F85E8; --block1-bg: #EDF2FC;
+      --block2:  #F07A52; --block2-bg: #FEF0EB;
+      --block3:  #9B7EF5; --block3-bg: #F2EFFE;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════════
+       APP SHELL
+    ══════════════════════════════════════════ */
+    #app { display:block; }
+
+    /* ── MAIN HEADER ── */
+    .header {
+      background:var(--primary); height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 28px; position:sticky; top:0; z-index:100;
+      box-shadow:0 2px 16px rgba(27,42,74,.18);
+    }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-hex { width:34px; height:34px; }
+    .logo-name { color:#fff; font-size:20px; font-weight:800; letter-spacing:-0.5px; }
+    .logo-sep-h { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
+    .logo-tag {
+      background:var(--accent); color:var(--primary);
+      font-size:10px; font-weight:700; letter-spacing:.6px;
+      text-transform:uppercase; padding:3px 9px; border-radius:20px;
+    }
+    .header-right { display:flex; align-items:center; gap:12px; }
+    .header-flag { font-size:24px; line-height:1; }
+    .header-country-name { color:rgba(255,255,255,.75); font-size:13px; font-weight:600; }
+
+    /* ── COUNTRY NAV ── */
+    .country-nav { display:flex; gap:4px; flex-wrap:wrap; }
+    .header-flag, .header-country-name { display:none; }
+    .c-btn {
+      display:flex; align-items:center; gap:6px; padding:6px 13px;
+      border-radius:24px; border:2px solid transparent;
+      background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.65);
+      cursor:pointer; font-size:13px; font-weight:500;
+      transition:background .18s,color .18s; white-space:nowrap;
+    }
+    .c-btn:hover { background:rgba(255,255,255,0.14); color:#fff; }
+    .c-btn.active { background:var(--accent); color:var(--primary); font-weight:700; }
+    .c-btn .flag { font-size:16px; line-height:1; }
+    .admin-badge { display:none; }
+
+    /* ── HERO ── */
+    .hero {
+      background:linear-gradient(135deg,#1B2A4A 0%,#263E6E 100%);
+      padding:44px 40px; display:flex; align-items:center; gap:28px;
+    }
+    .hero-flag { font-size:72px; line-height:1; filter:drop-shadow(0 4px 10px rgba(0,0,0,.25)); flex-shrink:0; }
+    .hero-body { flex:1; }
+    .week-chip {
+      display:inline-flex; align-items:center; gap:6px;
+      background:var(--accent); color:var(--primary);
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+      padding:4px 12px; border-radius:20px; margin-bottom:12px;
+    }
+    .hero-title { font-size:30px; font-weight:800; color:#fff; line-height:1.2; margin-bottom:8px; }
+    .hero-sub   { font-size:15px; color:rgba(255,255,255,.68); max-width:520px; line-height:1.55; }
+
+    /* ── MAIN ── */
+    .main { max-width:1300px; margin:0 auto; padding:44px 32px 60px; }
+
+    /* ── BLOCK ── */
+    .block { margin-bottom:52px; }
+    .block-head { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+    .block-num {
+      width:30px; height:30px; border-radius:9px;
+      background:var(--primary); color:#fff;
+      font-size:13px; font-weight:800;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .block-title { font-size:18px; font-weight:700; color:var(--primary); }
+    .block-divider { flex:1; height:1px; background:var(--border); margin-left:4px; }
+
+    /* ── CARDS ── */
+    .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(285px,1fr)); gap:18px; }
+    .card {
+      background:var(--card-bg); border:2px solid var(--border);
+      border-radius:18px; padding:24px; cursor:pointer;
+      display:flex; flex-direction:column; gap:14px;
+      position:relative; overflow:hidden;
+      transition:transform .22s cubic-bezier(.4,0,.2,1), box-shadow .22s cubic-bezier(.4,0,.2,1), border-color .22s;
+    }
+    .card::after {
+      content:''; position:absolute; inset:0 0 auto 0; height:3px;
+      background:var(--card-accent,var(--accent));
+      border-radius:2px 2px 0 0; opacity:0; transition:opacity .22s;
+    }
+    .card:hover { transform:translateY(-4px); box-shadow:0 12px 36px rgba(27,42,74,.13); border-color:var(--card-accent,var(--accent)); }
+    .card:hover::after { opacity:1; }
+    .b1 .card { --card-accent:var(--block1); --icon-color:var(--block1); --icon-bg:var(--block1-bg); --tag-color:var(--block1); --tag-bg:var(--block1-bg); }
+    .b2 .card { --card-accent:var(--block2); --icon-color:var(--block2); --icon-bg:var(--block2-bg); --tag-color:var(--block2); --tag-bg:var(--block2-bg); }
+    .b3 .card { --card-accent:var(--block3); --icon-color:var(--block3); --icon-bg:var(--block3-bg); --tag-color:var(--block3); --tag-bg:var(--block3-bg); }
+    .card-top { display:flex; align-items:flex-start; justify-content:space-between; }
+    .card-icon {
+      width:46px; height:46px; border-radius:13px;
+      background:var(--icon-bg,var(--accent-light));
+      display:flex; align-items:center; justify-content:center;
+    }
+    .card-icon svg { width:22px; height:22px; stroke:var(--icon-color,var(--accent)); }
+    .card-arrow { opacity:0; color:var(--card-accent,var(--accent)); transition:opacity .2s,transform .2s; }
+    .card:hover .card-arrow { opacity:1; transform:translate(2px,-2px); }
+    .card-title { font-size:15px; font-weight:700; color:var(--primary); line-height:1.3; }
+    .card-desc  { font-size:13px; color:var(--muted); line-height:1.58; flex:1; }
+    .card-tag {
+      display:inline-flex; align-items:center;
+      padding:3px 11px; border-radius:20px;
+      font-size:11px; font-weight:700;
+      background:var(--tag-bg,var(--accent-light));
+      color:var(--tag-color,var(--accent));
+      width:fit-content; text-transform:uppercase; letter-spacing:.4px;
+    }
+
+    /* ── OVERLAY ── */
+    .overlay {
+      position:fixed; inset:0;
+      background:rgba(18,30,58,.45);
+      z-index:200; opacity:0; pointer-events:none;
+      transition:opacity .3s; backdrop-filter:blur(3px);
+    }
+    .overlay.show { opacity:1; pointer-events:all; }
+
+    /* ── SIDE PANEL ── */
+    .panel {
+      position:fixed; top:0; right:0; bottom:0; width:500px;
+      background:#fff; z-index:300;
+      display:flex; flex-direction:column;
+      transform:translateX(105%);
+      transition:transform .35s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1);
+      box-shadow:-6px 0 48px rgba(18,30,58,.14);
+    }
+    .panel.open { transform:translateX(0); }
+    .panel.full { width:100vw; }
+    .panel-hdr {
+      padding:20px 22px; border-bottom:1.5px solid var(--border);
+      display:flex; align-items:center; gap:14px; flex-shrink:0;
+    }
+    .panel-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .panel-icon svg { width:20px; height:20px; }
+    .panel-meta { flex:1; min-width:0; }
+    .panel-block-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:2px; }
+    .panel-ttl { font-size:17px; font-weight:800; color:var(--primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .panel-ctrl { display:flex; gap:6px; }
+    .ctrl-btn {
+      width:36px; height:36px; border-radius:10px; border:none;
+      background:var(--bg); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted); transition:background .18s,color .18s;
+    }
+    .ctrl-btn:hover { background:var(--border); color:var(--primary); }
+    .ctrl-btn svg { width:15px; height:15px; }
+    .panel-body { flex:1; overflow-y:auto; padding:28px 24px; display:flex; flex-direction:column; gap:18px; }
+    .panel-desc-box { background:var(--bg); border-radius:13px; padding:16px 18px; font-size:14px; color:var(--muted); line-height:1.62; }
+    .panel-content-area {
+      flex:1; border:2px dashed var(--border); border-radius:16px;
+      min-height:260px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:12px; padding:40px 24px; text-align:center;
+    }
+    .ph-icon { width:56px; height:56px; border-radius:16px; background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--muted); }
+    .ph-icon svg { width:26px; height:26px; }
+    .ph-label { font-size:14px; font-weight:700; color:var(--primary); }
+    .ph-hint  { font-size:12px; color:var(--muted); max-width:260px; }
+    .panel-cta {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      width:100%; padding:13px 20px; background:var(--primary); color:#fff;
+      border:none; border-radius:13px; font-size:14px; font-weight:700;
+      cursor:pointer; transition:background .18s,transform .18s; flex-shrink:0;
+    }
+    .panel-cta:hover { background:#263E6E; transform:translateY(-1px); }
+    .panel-cta.disabled { opacity:.4; pointer-events:none; }
+    .panel-cta svg { width:15px; height:15px; }
+
+    /* ── PREVIEW BROWSER ── */
+    .panel-preview { display:none; flex-shrink:0; }
+    .preview-browser {
+      border-radius: 14px; overflow: hidden;
+      border: 1.5px solid var(--border);
+      box-shadow: 0 6px 24px rgba(27,42,74,0.10);
+    }
+    .preview-bar {
+      background: #f0f2f7; padding: 9px 12px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .preview-dots { display:flex; gap:5px; flex-shrink:0; }
+    .preview-dots span { width:9px; height:9px; border-radius:50%; }
+    .preview-dots span:nth-child(1) { background:#ff5f57; }
+    .preview-dots span:nth-child(2) { background:#febc2e; }
+    .preview-dots span:nth-child(3) { background:#28c840; }
+    .preview-url {
+      flex:1; background:#fff; border-radius:6px;
+      padding:4px 10px; font-size:11px; color:var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      border:1px solid #e0e6ef;
+    }
+    #previewFrame {
+      width:100%; height:340px; display:block;
+      background:#f5f7fa; border:none;
+    }
+    .preview-blocked {
+      height:340px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:12px;
+      background: linear-gradient(135deg,#f0f4ff 0%,#e8faf7 100%);
+      padding:32px;
+    }
+    .preview-blocked-icon { font-size:40px; }
+    .preview-blocked-msg { font-size:13px; color:var(--muted); text-align:center; max-width:240px; line-height:1.5; }
+
+    /* ── FOOTER ── */
+    .footer { background:var(--primary); color:rgba(255,255,255,.4); text-align:center; padding:22px 20px; font-size:12px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:900px) { .cards-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:620px) {
+      .cards-grid { grid-template-columns:1fr; }
+      .panel { width:100vw; }
+      .hero { flex-direction:column; text-align:center; padding:28px 20px; }
+      .header { padding:0 16px; }
+      .main { padding:28px 16px 50px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ APP ══════════════════ -->
+<div id="app">
+
+  <!-- MAIN HEADER -->
+  <header class="header">
+    <a class="logo" href="#">
+      <svg class="logo-hex" viewBox="0 0 34 34" fill="none">
+        <path d="M17 2L30 9.5V24.5L17 32L4 24.5V9.5L17 2Z" fill="rgba(255,255,255,0.12)"/>
+        <path d="M17 5.5L27 11.25V22.75L17 28.5L7 22.75V11.25L17 5.5Z" fill="white"/>
+        <path d="M14 12L20 15.5V22.5L14 26L8 22.5V15.5L14 12Z" fill="#00C9A7"/>
+      </svg>
+      <span class="logo-name">sesame</span>
+      <div class="logo-sep-h"></div>
+      <span class="logo-tag" id="weekLabel">Semana 2</span>
+    </a>
+    <div class="header-right">
+      <span class="admin-badge">👤 Admin</span>
+      <span class="header-flag" id="headerFlag">🇪🇸</span>
+      <span class="header-country-name" id="headerCountryName">España</span>
+      <nav class="country-nav" id="countryNav">
+        <button class="c-btn active" id="cBtn-es" onclick="selectCountry('es',this)"><span class="flag">🇪🇸</span><span>España</span></button>
+        <button class="c-btn"        id="cBtn-mx" onclick="selectCountry('mx',this)"><span class="flag">🇲🇽</span><span>México</span></button>
+        <button class="c-btn"        id="cBtn-it" onclick="selectCountry('it',this)"><span class="flag">🇮🇹</span><span>Italia</span></button>
+        <button class="c-btn"        id="cBtn-br" onclick="selectCountry('br',this)"><span class="flag">🇧🇷</span><span>Brasil</span></button>
+        <button class="c-btn"        id="cBtn-pt" onclick="selectCountry('pt',this)"><span class="flag">🇵🇹</span><span>Portugal</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-flag" id="heroFlag">🇪🇸</div>
+    <div class="hero-body">
+      <div class="week-chip">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span id="heroChip">Semana 2</span>
+      </div>
+      <h1 class="hero-title" id="heroTitle">Bienvenido a tu segunda semana, SDR</h1>
+      <p class="hero-sub" id="heroSub">Tu guía de recursos para convertirte en un SDR de alto rendimiento en Sesame HR</p>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- BLOCK 1 -->
+    <section class="block b1">
+      <div class="block-head">
+        <div class="block-num">1</div>
+        <h2 class="block-title" id="b1Title">Información general: SDR starting in your role</h2>
+        <div class="block-divider"></div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="card" onclick="openPanel(0)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c0t">Sesame storytelling</div>
+          <div class="card-desc"  data-key="c0d">Iniciémonos en el rol de SDR conociendo el mundo HR y el valor que Sesame aporta a las empresas</div>
+          <span class="card-tag"  data-key="c0g">Bloque 1</span>
+        </div>
+
+        <div class="card" onclick="openPanel(1)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c1t">Career path &amp; Ramp up evaluation</div>
+          <div class="card-desc"  data-key="c1d">Conoce el modelo de evaluación de desempeño y cómo garantizar una performance full SDR</div>
+          <span class="card-tag"  data-key="c1g">Bloque 1</span>
+        </div>
+
+        <div class="card" onclick="openPanel(2)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c2t">Active listening training</div>
+          <div class="card-desc"  data-key="c2d">Potencia tu escucha activa y descubre cómo identificar los insights que te llevarán al éxito</div>
+          <span class="card-tag"  data-key="c2g">Bloque 1</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- BLOCK 2 -->
+    <section class="block b2">
+      <div class="block-head">
+        <div class="block-num">2</div>
+        <h2 class="block-title" id="b2Title">SDR operations insights</h2>
+        <div class="block-divider"></div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="card" onclick="openPanel(3)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c3t">Hubspot</div>
+          <div class="card-desc"  data-key="c3d">Descubre las secciones, vistas y organización del CRM para poder reflejar toda tu actividad de manera eficiente</div>
+          <span class="card-tag"  data-key="c3g">Bloque 2</span>
+        </div>
+
+        <div class="card" onclick="openPanel(4)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M2 20h2l2-8 4 12 4-16 2 12h2M18 2l4 4-4 4"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c4t">Deal stages &amp; funnel</div>
+          <div class="card-desc"  data-key="c4d">Conoce cómo avanzar en tus negociaciones y cómo deben de reflejarse para construir un commit eficiente y seguro</div>
+          <span class="card-tag"  data-key="c4g">Bloque 2</span>
+        </div>
+
+        <div class="card" onclick="openPanel(5)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c5t">SDR Qualification note</div>
+          <div class="card-desc"  data-key="c5d">Aprende cuáles son los criterios de cualificación y cómo debe de justificarse para garantizar la máxima conversión</div>
+          <span class="card-tag"  data-key="c5g">Bloque 2</span>
+        </div>
+
+        <div class="card" onclick="openPanel(6)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><path d="M2 20h20"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c6t">Dashboards de seguimiento</div>
+          <div class="card-desc"  data-key="c6d">Accede a los dashboards más relevantes que te ayudarán en tu seguimiento diario</div>
+          <span class="card-tag"  data-key="c6g">Bloque 2</span>
+        </div>
+
+        <div class="card" onclick="openPanel(7)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c7t">Dinámicas del team</div>
+          <div class="card-desc"  data-key="c7d">Garantiza el buen seguimiento y estate al día de todo</div>
+          <span class="card-tag"  data-key="c7g">Bloque 2</span>
+        </div>
+
+        <div class="card" onclick="openPanel(8)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c8t">Incidencias del batch y procesos de lead ops</div>
+          <div class="card-desc"  data-key="c8d">Descubre los sanity checks del equipo y cómo garantizar un pipeline sano</div>
+          <span class="card-tag"  data-key="c8g">Bloque 2</span>
+        </div>
+
+        <!-- NEW CARD: Compensation plan -->
+        <div class="card" onclick="openPanel(9)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c9t">Compensation plan</div>
+          <div class="card-desc"  data-key="c9d">Conoce cómo llevar un seguimiento de tus demos generadas y aprende a calcular tu compensación.</div>
+          <span class="card-tag"  data-key="c9g">Bloque 2</span>
+        </div>
+
+        <!-- NEW CARD: Mapeo del ICP correcto -->
+        <div class="card" onclick="openPanel(10)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="2"  y1="12" x2="6"  y2="12"/><line x1="12" y1="2"  x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c10t">Mapeo del ICP correcto</div>
+          <div class="card-desc"  data-key="c10d">Investiga cuáles son las claves para encontrar a tu DM correcto. Conoce las best practices del equipo para maximizar tu conversión.</div>
+          <span class="card-tag"  data-key="c10g">Bloque 2</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- BLOCK 3 -->
+    <section class="block b3">
+      <div class="block-head">
+        <div class="block-num">3</div>
+        <h2 class="block-title" id="b3Title">⭐ Bonus track</h2>
+        <div class="block-divider"></div>
+      </div>
+      <div class="cards-grid">
+
+        <div class="card" onclick="openPanel(11)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c11t">SDR on demand</div>
+          <div class="card-desc"  data-key="c11d">Accede a llamadas y demos en diferido para empezar a calentar motores</div>
+          <span class="card-tag"  data-key="c11g">Bonus</span>
+        </div>
+
+        <div class="card" onclick="openPanel(12)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c12t">IT requirements</div>
+          <div class="card-desc"  data-key="c12d">Accede al repositorio de links clave para solicitar cambios de equipo o incidencias relacionadas con licencias</div>
+          <span class="card-tag"  data-key="c12g">Bonus</span>
+        </div>
+
+        <div class="card" onclick="openPanel(13)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c13t">Handbook / Megabrain</div>
+          <div class="card-desc"  data-key="c13d">Investiga todo lo que necesitas saber a través del repositorio de procesos de Sesame</div>
+          <span class="card-tag"  data-key="c13g">Bonus</span>
+        </div>
+
+        <div class="card" onclick="openPanel(14)">
+          <div class="card-top">
+            <div class="card-icon"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
+            <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </div>
+          <div class="card-title" data-key="c14t">Product Roadmap</div>
+          <div class="card-desc"  data-key="c14d">Accede a las novedades sobre los lanzamientos de producto y profesionaliza tu asesoramiento con tus prospects.</div>
+          <span class="card-tag"  data-key="c14g">Bonus</span>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><p>© 2025 Sesame HR · SDR Onboarding Program</p></footer>
+
+  <div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+  <!-- SIDE PANEL -->
+  <div class="panel" id="panel">
+    <div class="panel-hdr">
+      <div class="panel-icon" id="panelIcon"></div>
+      <div class="panel-meta">
+        <div class="panel-block-lbl" id="panelLbl">—</div>
+        <div class="panel-ttl"       id="panelTtl">—</div>
+      </div>
+      <div class="panel-ctrl">
+        <button class="ctrl-btn" onclick="toggleFS()" title="Pantalla completa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="fsIco">
+            <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+          </svg>
+        </button>
+        <button class="ctrl-btn" onclick="closePanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="panel-desc-box" id="panelDesc"></div>
+
+      <!-- PREVIEW: solo visible en cards con preview:true -->
+      <div class="panel-preview" id="panelPreview">
+        <div class="preview-browser">
+          <div class="preview-bar">
+            <div class="preview-dots"><span></span><span></span><span></span></div>
+            <div class="preview-url" id="previewUrl">https://sesame-productbuilding.replit.app/</div>
+          </div>
+          <iframe id="previewFrame" src="" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media"
+            sandbox="allow-scripts allow-same-origin allow-forms"
+            title="Product Roadmap preview"></iframe>
+        </div>
+      </div>
+
+      <div class="panel-content-area" id="panelPlaceholder">
+        <div class="ph-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/>
+            <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+        </div>
+        <div class="ph-label" id="phLabel">Enlace pendiente de configurar</div>
+        <div class="ph-hint"  id="phHint">El contenido estará disponible cuando se añada el link correspondiente</div>
+      </div>
+      <button class="panel-cta disabled" id="panelCta" onclick="goToLink()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        <span id="ctaLabel">Abrir recurso</span>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ══════════════════ SCRIPT ══════════════════ -->
+<script>
+
+/* ─────────────────────────────────────────────────────────────
+   COUNTRY META
+───────────────────────────────────────────────────────────── */
+const COUNTRY_META = {
+  es: { flag:'🇪🇸', name:'España'   },
+  mx: { flag:'🇲🇽', name:'México'   },
+  it: { flag:'🇮🇹', name:'Italia'   },
+  br: { flag:'🇧🇷', name:'Brasil'   },
+  pt: { flag:'🇵🇹', name:'Portugal' },
+};
+
+/* ─────────────────────────────────────────────────────────────
+   CONTENT DATA  (14 cards × 5 languages)
+───────────────────────────────────────────────────────────── */
+const DATA = {
+  es: {
+    lang:'es', week:'Semana 2',
+    hero:'Bienvenido a tu segunda semana, SDR',
+    sub:'Tu guía de recursos para convertirte en un SDR de alto rendimiento en Sesame HR',
+    b1:'Información general: SDR starting in your role',
+    b2:'SDR operations insights', b3:'⭐ Bonus track',
+    openBtn:'Abrir recurso',
+    phLabel:'Enlace pendiente de configurar',
+    phHint:'El contenido estará disponible cuando se añada el link correspondiente',
+    cards:[
+      {t:'Sesame storytelling',                        d:'Iniciémonos en el rol de SDR conociendo el mundo HR y el valor que Sesame aporta a las empresas',                              g:'Bloque 1', b:1, link:''},
+      {t:'Career path & Ramp up evaluation',           d:'Conoce el modelo de evaluación de desempeño y cómo garantizar una performance full SDR',                                       g:'Bloque 1', b:1, link:''},
+      {t:'Active listening training',                  d:'Potencia tu escucha activa y descubre cómo identificar los insights que te llevarán al éxito',                                 g:'Bloque 1', b:1, link:''},
+      {t:'Hubspot',                                    d:'Descubre las secciones, vistas y organización del CRM para poder reflejar toda tu actividad de manera eficiente',              g:'Bloque 2', b:2, link:''},
+      {t:'Deal stages & funnel',                       d:'Conoce cómo avanzar en tus negociaciones y cómo deben de reflejarse para construir un commit eficiente y seguro',              g:'Bloque 2', b:2, link:''},
+      {t:'SDR Qualification note',                     d:'Aprende cuáles son los criterios de cualificación y cómo debe de justificarse para garantizar la máxima conversión',           g:'Bloque 2', b:2, link:''},
+      {t:'Dashboards de seguimiento',                  d:'Accede a los dashboards más relevantes que te ayudarán en tu seguimiento diario',                                              g:'Bloque 2', b:2, link:''},
+      {t:'Dinámicas del team',                         d:'Garantiza el buen seguimiento y estate al día de todo',                                                                         g:'Bloque 2', b:2, link:''},
+      {t:'Incidencias del batch y procesos de lead ops', d:'Descubre los sanity checks del equipo y cómo garantizar un pipeline sano',                                                   g:'Bloque 2', b:2, link:''},
+      {t:'Compensation plan',                          d:'Conoce cómo llevar un seguimiento de tus demos generadas y aprende a calcular tu compensación.',                               g:'Bloque 2', b:2, link:''},
+      {t:'Mapeo del ICP correcto',                     d:'Investiga cuáles son las claves para encontrar a tu DM correcto. Conoce las best practices del equipo para maximizar tu conversión.', g:'Bloque 2', b:2, link:''},
+      {t:'SDR on demand',                              d:'Accede a llamadas y demos en diferido para empezar a calentar motores',                                                         g:'Bonus',    b:3, link:''},
+      {t:'IT requirements',                            d:'Accede al repositorio de links clave para solicitar cambios de equipo o incidencias relacionadas con licencias',               g:'Bonus',    b:3, link:''},
+      {t:'Handbook / Megabrain',                       d:'Investiga todo lo que necesitas saber a través del repositorio de procesos de Sesame',                                         g:'Bonus',    b:3, link:''},
+      {t:'Product Roadmap',                            d:'Accede a las novedades sobre los lanzamientos de producto y profesionaliza tu asesoramiento con tus prospects. Confirma tus credenciales con tu TL', g:'Bonus', b:3, link:'https://sesame-productbuilding.replit.app/', preview:true},
+    ]
+  },
+  mx: {
+    lang:'es', week:'Semana 2',
+    hero:'Bienvenido a tu segunda semana, SDR',
+    sub:'Tu guía de recursos para convertirte en un SDR de alto rendimiento en Sesame HR',
+    b1:'Información general: SDR starting in your role',
+    b2:'SDR operations insights', b3:'⭐ Bonus track',
+    openBtn:'Abrir recurso',
+    phLabel:'Enlace pendiente de configurar',
+    phHint:'El contenido estará disponible cuando se añada el link correspondiente',
+    cards:[
+      {t:'Sesame storytelling',                        d:'Iniciémonos en el rol de SDR conociendo el mundo HR y el valor que Sesame aporta a las empresas',                              g:'Bloque 1', b:1, link:''},
+      {t:'Career path & Ramp up evaluation',           d:'Conoce el modelo de evaluación de desempeño y cómo garantizar una performance full SDR',                                       g:'Bloque 1', b:1, link:''},
+      {t:'Active listening training',                  d:'Potencia tu escucha activa y descubre cómo identificar los insights que te llevarán al éxito',                                 g:'Bloque 1', b:1, link:''},
+      {t:'Hubspot',                                    d:'Descubre las secciones, vistas y organización del CRM para poder reflejar toda tu actividad de manera eficiente',              g:'Bloque 2', b:2, link:''},
+      {t:'Deal stages & funnel',                       d:'Conoce cómo avanzar en tus negociaciones y cómo deben de reflejarse para construir un commit eficiente y seguro',              g:'Bloque 2', b:2, link:''},
+      {t:'SDR Qualification note',                     d:'Aprende cuáles son los criterios de cualificación y cómo debe de justificarse para garantizar la máxima conversión',           g:'Bloque 2', b:2, link:''},
+      {t:'Dashboards de seguimiento',                  d:'Accede a los dashboards más relevantes que te ayudarán en tu seguimiento diario',                                              g:'Bloque 2', b:2, link:''},
+      {t:'Dinámicas del team',                         d:'Garantiza el buen seguimiento y estate al día de todo',                                                                         g:'Bloque 2', b:2, link:''},
+      {t:'Incidencias del batch y procesos de lead ops', d:'Descubre los sanity checks del equipo y cómo garantizar un pipeline sano',                                                   g:'Bloque 2', b:2, link:''},
+      {t:'Compensation plan',                          d:'Conoce cómo llevar un seguimiento de tus demos generadas y aprende a calcular tu compensación.',                               g:'Bloque 2', b:2, link:''},
+      {t:'Mapeo del ICP correcto',                     d:'Investiga cuáles son las claves para encontrar a tu DM correcto. Conoce las best practices del equipo para maximizar tu conversión.', g:'Bloque 2', b:2, link:''},
+      {t:'SDR on demand',                              d:'Accede a llamadas y demos en diferido para empezar a calentar motores',                                                         g:'Bonus',    b:3, link:''},
+      {t:'IT requirements',                            d:'Accede al repositorio de links clave para solicitar cambios de equipo o incidencias relacionadas con licencias',               g:'Bonus',    b:3, link:''},
+      {t:'Handbook / Megabrain',                       d:'Investiga todo lo que necesitas saber a través del repositorio de procesos de Sesame',                                         g:'Bonus',    b:3, link:''},
+      {t:'Product Roadmap',                            d:'Accede a las novedades sobre los lanzamientos de producto y profesionaliza tu asesoramiento con tus prospects. Confirma tus credenciales con tu TL', g:'Bonus', b:3, link:'https://sesame-productbuilding.replit.app/', preview:true},
+    ]
+  },
+  it: {
+    lang:'it', week:'Settimana 2',
+    hero:'Benvenuto nella tua seconda settimana, SDR',
+    sub:'La tua guida alle risorse per diventare un SDR ad alte prestazioni in Sesame HR',
+    b1:'Informazioni generali: SDR, inizia nel tuo ruolo',
+    b2:'Approfondimenti operativi SDR', b3:'⭐ Bonus track',
+    openBtn:'Apri risorsa',
+    phLabel:'Link in attesa di configurazione',
+    phHint:'Il contenuto sarà disponibile una volta aggiunto il link corrispondente',
+    cards:[
+      {t:'Sesame storytelling',                        d:'Iniziamo il ruolo di SDR conoscendo il mondo HR e il valore che Sesame porta alle aziende',                                    g:'Blocco 1', b:1, link:''},
+      {t:'Career path & Ramp up evaluation',           d:'Scopri il modello di valutazione delle prestazioni e come garantire una performance da SDR completo',                          g:'Blocco 1', b:1, link:''},
+      {t:'Active listening training',                  d:"Potenzia l'ascolto attivo e scopri come identificare gli insight che ti porteranno al successo",                               g:'Blocco 1', b:1, link:''},
+      {t:'Hubspot',                                    d:"Scopri le sezioni, le viste e l'organizzazione del CRM per riflettere tutta la tua attività in modo efficiente",              g:'Blocco 2', b:2, link:''},
+      {t:'Deal stages & funnel',                       d:'Scopri come avanzare nelle tue trattative e come devono essere riflesse per costruire un commit efficiente e sicuro',          g:'Blocco 2', b:2, link:''},
+      {t:'SDR Qualification note',                     d:'Impara quali sono i criteri di qualificazione e come devono essere giustificati per garantire la massima conversione',         g:'Blocco 2', b:2, link:''},
+      {t:'Dashboard di monitoraggio',                  d:'Accedi alle dashboard più rilevanti che ti aiuteranno nel tuo monitoraggio quotidiano',                                        g:'Blocco 2', b:2, link:''},
+      {t:'Dinamiche del team',                         d:'Garantisci un buon monitoraggio e rimani aggiornato su tutto',                                                                 g:'Blocco 2', b:2, link:''},
+      {t:'Incidenti del batch e processi di lead ops', d:'Scopri i sanity check del team e come garantire un pipeline sano',                                                             g:'Blocco 2', b:2, link:''},
+      {t:'Piano di compensazione',                     d:'Scopri come monitorare le tue demo generate e impara a calcolare la tua compensazione.',                                       g:'Blocco 2', b:2, link:''},
+      {t:"Mappatura dell'ICP corretto",                d:'Ricerca le chiavi per trovare il tuo DM corretto. Scopri le best practice del team per massimizzare la tua conversione.',     g:'Blocco 2', b:2, link:''},
+      {t:'SDR on demand',                              d:'Accedi a chiamate e demo in differita per iniziare a scaldarti',                                                               g:'Bonus',    b:3, link:''},
+      {t:'IT requirements',                            d:'Accedi al repository di link chiave per richiedere cambi di attrezzatura o problemi relativi alle licenze',                   g:'Bonus',    b:3, link:''},
+      {t:'Handbook / Megabrain',                       d:"Ricerca tutto ciò che devi sapere attraverso il repository dei processi di Sesame",                                           g:'Bonus',    b:3, link:''},
+      {t:'Product Roadmap',                            d:'Accedi alle novità sui lanci di prodotto e professionalizza la tua consulenza con i tuoi prospect. Conferma le tue credenziali con il tuo TL', g:'Bonus', b:3, link:'https://sesame-productbuilding.replit.app/', preview:true},
+    ]
+  },
+  br: {
+    lang:'pt-BR', week:'Semana 2',
+    hero:'Bem-vindo à sua segunda semana, SDR',
+    sub:'Seu guia de recursos para se tornar um SDR de alta performance no Sesame HR',
+    b1:'Informações gerais: SDR, começando no seu papel',
+    b2:'Insights operacionais do SDR', b3:'⭐ Bonus track',
+    openBtn:'Abrir recurso',
+    phLabel:'Link pendente de configuração',
+    phHint:'O conteúdo estará disponível quando o link correspondente for adicionado',
+    cards:[
+      {t:'Sesame storytelling',                        d:'Vamos começar o papel de SDR conhecendo o mundo de RH e o valor que o Sesame traz para as empresas',                          g:'Bloco 1', b:1, link:''},
+      {t:'Career path & Ramp up evaluation',           d:'Conheça o modelo de avaliação de desempenho e como garantir uma performance de SDR completo',                                 g:'Bloco 1', b:1, link:''},
+      {t:'Active listening training',                  d:'Potencialize sua escuta ativa e descubra como identificar os insights que levarão ao sucesso',                                 g:'Bloco 1', b:1, link:''},
+      {t:'Hubspot',                                    d:'Descubra as seções, visualizações e organização do CRM para refletir toda a sua atividade de forma eficiente',                g:'Bloco 2', b:2, link:''},
+      {t:'Deal stages & funnel',                       d:'Conheça como avançar nas suas negociações e como devem ser refletidas para construir um commit eficiente e seguro',            g:'Bloco 2', b:2, link:''},
+      {t:'SDR Qualification note',                     d:'Aprenda quais são os critérios de qualificação e como deve ser justificado para garantir a máxima conversão',                 g:'Bloco 2', b:2, link:''},
+      {t:'Dashboards de acompanhamento',               d:'Acesse os dashboards mais relevantes que vão te ajudar no seu acompanhamento diário',                                         g:'Bloco 2', b:2, link:''},
+      {t:'Dinâmicas do time',                          d:'Garanta um bom acompanhamento e fique por dentro de tudo',                                                                    g:'Bloco 2', b:2, link:''},
+      {t:'Incidências do batch e processos de lead ops', d:'Descubra os sanity checks da equipe e como garantir um pipeline saudável',                                                   g:'Bloco 2', b:2, link:''},
+      {t:'Plano de compensação',                       d:'Saiba como acompanhar suas demos geradas e aprenda a calcular sua compensação.',                                              g:'Bloco 2', b:2, link:''},
+      {t:'Mapeamento do ICP correto',                  d:'Pesquise quais são as chaves para encontrar o seu DM correto. Conheça as melhores práticas da equipe para maximizar sua conversão.', g:'Bloco 2', b:2, link:''},
+      {t:'SDR on demand',                              d:'Acesse chamadas e demos gravadas para começar a entrar no ritmo',                                                              g:'Bonus',   b:3, link:''},
+      {t:'IT requirements',                            d:'Acesse o repositório de links-chave para solicitar mudanças de equipamento ou incidentes relacionados a licenças',            g:'Bonus',   b:3, link:''},
+      {t:'Handbook / Megabrain',                       d:'Pesquise tudo o que precisa saber através do repositório de processos do Sesame',                                            g:'Bonus',   b:3, link:''},
+      {t:'Product Roadmap',                            d:'Acesse as novidades sobre os lançamentos de produto e profissionalize seu aconselhamento com seus prospects. Confirme suas credenciais com seu TL', g:'Bonus', b:3, link:'https://sesame-productbuilding.replit.app/', preview:true},
+    ]
+  },
+  pt: {
+    lang:'pt-PT', week:'Semana 2',
+    hero:'Bem-vindo à tua segunda semana, SDR',
+    sub:'O teu guia de recursos para te tornares um SDR de alto desempenho no Sesame HR',
+    b1:'Informações gerais: SDR, começando no teu papel',
+    b2:'Insights operacionais do SDR', b3:'⭐ Bonus track',
+    openBtn:'Abrir recurso',
+    phLabel:'Link pendente de configuração',
+    phHint:'O conteúdo estará disponível quando o link correspondente for adicionado',
+    cards:[
+      {t:'Sesame storytelling',                        d:'Vamos iniciar o papel de SDR conhecendo o mundo de RH e o valor que o Sesame traz às empresas',                               g:'Bloco 1', b:1, link:''},
+      {t:'Career path & Ramp up evaluation',           d:'Conhece o modelo de avaliação de desempenho e como garantir uma performance de SDR completo',                                 g:'Bloco 1', b:1, link:''},
+      {t:'Active listening training',                  d:'Potencia a tua escuta ativa e descobre como identificar os insights que te levarão ao sucesso',                               g:'Bloco 1', b:1, link:''},
+      {t:'Hubspot',                                    d:'Descobre as secções, vistas e organização do CRM para refletir toda a tua atividade de forma eficiente',                      g:'Bloco 2', b:2, link:''},
+      {t:'Deal stages & funnel',                       d:'Conhece como avançar nas tuas negociações e como devem ser refletidas para construir um commit eficiente e seguro',            g:'Bloco 2', b:2, link:''},
+      {t:'SDR Qualification note',                     d:'Aprende quais são os critérios de qualificação e como deve ser justificado para garantir a máxima conversão',                 g:'Bloco 2', b:2, link:''},
+      {t:'Dashboards de acompanhamento',               d:'Acede aos dashboards mais relevantes que te vão ajudar no teu acompanhamento diário',                                         g:'Bloco 2', b:2, link:''},
+      {t:'Dinâmicas da equipa',                        d:'Garante um bom acompanhamento e fica a par de tudo',                                                                          g:'Bloco 2', b:2, link:''},
+      {t:'Incidências do batch e processos de lead ops', d:'Descobre os sanity checks da equipa e como garantir um pipeline saudável',                                                   g:'Bloco 2', b:2, link:''},
+      {t:'Plano de compensação',                       d:'Descobre como acompanhar as tuas demos geradas e aprende a calcular a tua compensação.',                                      g:'Bloco 2', b:2, link:''},
+      {t:'Mapeamento do ICP correto',                  d:'Investiga quais são as chaves para encontrar o teu DM correto. Conhece as melhores práticas da equipa para maximizar a tua conversão.', g:'Bloco 2', b:2, link:''},
+      {t:'SDR on demand',                              d:'Acede a chamadas e demos em diferido para começar a aquecer motores',                                                          g:'Bonus',   b:3, link:''},
+      {t:'IT requirements',                            d:'Acede ao repositório de links-chave para solicitar mudanças de equipamento ou incidências relacionadas com licenças',         g:'Bonus',   b:3, link:''},
+      {t:'Handbook / Megabrain',                       d:'Investiga tudo o que precisas de saber através do repositório de processos do Sesame',                                        g:'Bonus',   b:3, link:''},
+      {t:'Product Roadmap',                            d:'Acede às novidades sobre os lançamentos de produto e profissionaliza o teu aconselhamento com os teus prospects. Confirma as tuas credenciais com o teu TL', g:'Bonus', b:3, link:'https://sesame-productbuilding.replit.app/', preview:true},
+    ]
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────
+   ICONS (14 entries, index = card index)
+───────────────────────────────────────────────────────────── */
+const ICONS = [
+  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  '<path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>',
+  '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  '<path d="M2 20h2l2-8 4 12 4-16 2 12h2M18 2l4 4-4 4"/>',
+  '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+  '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><path d="M2 20h20"/>',
+  '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+  '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+  '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>',
+  '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+  '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>',
+  '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+];
+
+const BLK = { 1:['var(--block1)','var(--block1-bg)'], 2:['var(--block2)','var(--block2-bg)'], 3:['var(--block3)','var(--block3-bg)'] };
+
+
+/* ─────────────────────────────────────────────────────────────
+   RENDER CONTENT
+───────────────────────────────────────────────────────────── */
+function render(c) {
+  const d = DATA[c];
+  document.documentElement.lang = d.lang;
+  document.getElementById('weekLabel').textContent  = d.week;
+  document.getElementById('heroChip').textContent   = d.week;
+  document.getElementById('heroTitle').textContent  = d.hero;
+  document.getElementById('heroSub').textContent    = d.sub;
+  document.getElementById('b1Title').textContent    = d.b1;
+  document.getElementById('b2Title').textContent    = d.b2;
+  document.getElementById('b3Title').textContent    = d.b3;
+  d.cards.forEach((card, i) => {
+    const t = document.querySelector(`[data-key="c${i}t"]`);
+    const dd = document.querySelector(`[data-key="c${i}d"]`);
+    const g  = document.querySelector(`[data-key="c${i}g"]`);
+    if (t) t.textContent  = card.t;
+    if (dd) dd.textContent = card.d;
+    if (g) g.textContent  = card.g;
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COUNTRY SWITCH
+───────────────────────────────────────────────────────────── */
+let currentViewingCountry = 'es';
+
+function selectCountry(c, btn) {
+  currentViewingCountry = c;
+  document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('heroFlag').textContent = COUNTRY_META[c].flag;
+  render(c);
+  closePanel();
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PANEL
+───────────────────────────────────────────────────────────── */
+let activeIdx = null;
+let isFS = false;
+
+function openPanel(idx) {
+  const d = DATA[currentViewingCountry];
+  const card = d.cards[idx];
+  if (!card) return;
+  activeIdx = idx;
+
+  const [color, bg] = BLK[card.b];
+  const iconEl = document.getElementById('panelIcon');
+  iconEl.style.background = bg;
+  iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2">${ICONS[idx]}</svg>`;
+
+  document.getElementById('panelLbl').style.color  = color;
+  document.getElementById('panelLbl').textContent  = card.g;
+  document.getElementById('panelTtl').textContent  = card.t;
+  document.getElementById('panelDesc').textContent = card.d;
+  document.getElementById('phLabel').textContent   = d.phLabel;
+  document.getElementById('phHint').textContent    = d.phHint;
+  document.getElementById('ctaLabel').textContent  = d.openBtn;
+
+  const cta = document.getElementById('panelCta');
+  cta.classList.toggle('disabled', !card.link);
+
+  // Preview iframe vs placeholder
+  const previewEl     = document.getElementById('panelPreview');
+  const placeholderEl = document.getElementById('panelPlaceholder');
+  const frameEl       = document.getElementById('previewFrame');
+  const urlEl         = document.getElementById('previewUrl');
+
+  if (card.preview && card.link) {
+    previewEl.style.display     = 'block';
+    placeholderEl.style.display = 'none';
+    urlEl.textContent = card.link;
+    // Only reload if different link to avoid flicker
+    if (frameEl.src !== card.link) frameEl.src = card.link;
+  } else {
+    previewEl.style.display     = 'none';
+    placeholderEl.style.display = '';
+    frameEl.src = '';
+  }
+
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePanel() {
+  document.getElementById('overlay').classList.remove('show');
+  const p = document.getElementById('panel');
+  p.classList.remove('open', 'full');
+  isFS = false;
+  document.getElementById('fsIco').innerHTML = '<path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>';
+  document.body.style.overflow = '';
+  activeIdx = null;
+}
+
+function toggleFS() {
+  isFS = !isFS;
+  document.getElementById('panel').classList.toggle('full', isFS);
+  document.getElementById('fsIco').innerHTML = isFS
+    ? '<path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/>'
+    : '<path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>';
+}
+
+function goToLink() {
+  if (activeIdx === null) return;
+  const link = DATA[currentViewingCountry].cards[activeIdx].link;
+  if (link) window.open(link, '_blank');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+/* ─────────────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────────────── */
+(function init() {
+  render('es');
+})();
+</script>
+</body>
+</html>
